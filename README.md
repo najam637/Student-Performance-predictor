@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Student Performance Predictor
 
 A small full-stack machine learning app. Enter a student's study habits and get a predicted **exam score** (regression) or **final grade** (classification).
@@ -51,3 +52,7 @@ Both models are Extra Trees (scikit-learn), trained on 80% of the data and teste
 - `Resources`, `Motivation`, `Extracurricular` and `Internet` were left out. The exam score never changes when only these columns change, so they only add noise.
 - The dataset holds about 4,200 unique student profiles, each repeated several times. The scores above are measured on held-out rows, but similar profiles also appear in the training data. For a profile unlike any in the dataset, the typical error is about 16 marks, close to guessing the average. Real-world accuracy would be lower than the table above.
 - The CSV does not explain what codes like `Gender` or `LearningStyle` mean, so the page shows neutral labels. They can be renamed at the top of the script in `static/index.html`.
+=======
+# Student-Performance-predictor
+Full-Stack Machine Learning App — Student Performance Predictor  
+>>>>>>> 60eb4c79d8bdcdbf4294a4026f0feb2b6abaaeac
