@@ -1,0 +1,80 @@
+{
+  "regression": {
+    "mae": 1.91,
+    "r2": 0.872
+  },
+  "classification": {
+    "accuracy": 0.908
+  },
+  "new_profile_mae": 15.97,
+  "grade_bands": {
+    "0": [
+      85,
+      100
+    ],
+    "1": [
+      70,
+      84
+    ],
+    "2": [
+      55,
+      69
+    ],
+    "3": [
+      40,
+      54
+    ]
+  },
+  "features": {
+    "StudyHours": {
+      "min": 5,
+      "max": 44,
+      "default": 20
+    },
+    "Attendance": {
+      "min": 60,
+      "max": 100,
+      "default": 80
+    },
+    "Age": {
+      "min": 18,
+      "max": 29,
+      "default": 24
+    },
+    "Gender": {
+      "min": 0,
+      "max": 1,
+      "default": 1
+    },
+    "LearningStyle": {
+      "min": 0,
+      "max": 3,
+      "default": 2
+    },
+    "OnlineCourses": {
+      "min": 0,
+      "max": 20,
+      "default": 10
+    },
+    "Discussions": {
+      "min": 0,
+      "max": 1,
+      "default": 1
+    },
+    "AssignmentCompletion": {
+      "min": 50,
+      "max": 100,
+      "default": 74
+    },
+    "EduTech": {
+      "min": 0,
+      "max": 1,
+      "default": 1
+    },
+    "StressLevel": {
+      "min": 0,
+      "max": 2,
+      "default": 2
+    }
+  }
+}

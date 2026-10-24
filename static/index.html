@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Student Performance Predictor</title>
+<script>try{var t=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F3F6FC; --dot:#D5DEF0; --card:#FFFFFF; --ink:#14213D; --muted:#5B6783; --edge:#D9E1F0;
+  --blue:#2F4FD8; --on-blue:#FFFFFF; --blue-soft:#E8EDFD; --pen:#D8344A; --rule:#DCE6F5; --margin:#F2B8C0; --sheet:#FFFEFB;
+  --s1:#C9D5FB; --s2:#9DB2F7; --s3:#6A87EE; --s4:#2F4FD8; --shadow:0 1px 2px rgba(20,33,61,.05),0 10px 30px rgba(20,33,61,.07);
+  --display:"Bricolage Grotesque",system-ui,sans-serif; --body:"Figtree",system-ui,sans-serif; color-scheme:light;
+}
+[data-theme="dark"]{
+  --bg:#0D1324; --dot:#1A2340; --card:#141C33; --ink:#E8ECF8; --muted:#9AA6C4; --edge:#27325A;
+  --blue:#7F96FF; --on-blue:#0D1324; --blue-soft:#1E2A55; --pen:#FF6F83; --rule:#222D52; --margin:#6A2F3D; --sheet:#182040;
+  --s1:#2A3868; --s2:#3F58AE; --s3:#6280E6; --s4:#93A9FF; --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35); color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);background-image:radial-gradient(var(--dot) 1px,transparent 1px);background-size:22px 22px;
+  color:var(--ink);font:400 1rem/1.55 var(--body);padding:0 16px 56px;transition:background-color .3s,color .3s}
+.wrap{max-width:1080px;margin:0 auto}
+
+header{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;padding:36px 0 18px}
+h1{font:700 clamp(1.9rem,4vw,2.8rem)/1.1 var(--display);margin:0 0 8px;letter-spacing:-.02em}
+header p{margin:0;color:var(--muted);max-width:56ch}
+.theme{flex:none;width:44px;height:44px;border-radius:12px;border:1px solid var(--edge);background:var(--card);color:var(--ink);cursor:pointer;display:grid;place-items:center;box-shadow:var(--shadow)}
+.theme svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.theme .moon{display:none}
+[data-theme="dark"] .theme .sun{display:none}
+[data-theme="dark"] .theme .moon{display:block}
+
+.stats{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 24px}
+.stat{background:var(--card);border:1px solid var(--edge);border-radius:999px;padding:6px 14px;font-size:.92rem;color:var(--muted)}
+.stat b{color:var(--blue);font-weight:600;font-variant-numeric:tabular-nums}
+
+.tabs{position:relative;display:inline-grid;grid-template-columns:1fr 1fr;background:var(--card);border:1px solid var(--edge);border-radius:12px;padding:4px;margin-bottom:20px;box-shadow:var(--shadow)}
+.tabs::before{content:"";position:absolute;top:4px;bottom:4px;left:4px;width:calc(50% - 4px);background:var(--blue);border-radius:9px;transform:translateX(calc(var(--i,0)*100%));transition:transform .28s cubic-bezier(.4,.1,.2,1)}
+.tabs button{position:relative;z-index:1;font:600 .95rem var(--body);border:0;background:none;color:var(--muted);padding:10px 20px;border-radius:9px;cursor:pointer;transition:color .2s}
+.tabs button[aria-selected="true"]{color:var(--on-blue)}
+
+.panel{display:none;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:24px;align-items:start}
+.panel.active{display:grid}
+.panel.enter{animation:enter .3s ease-out}
+@keyframes enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+form{background:var(--card);border:1px solid var(--edge);border-radius:18px;padding:26px;box-shadow:var(--shadow)}
+form h2{font:700 1.3rem var(--display);margin:0 0 4px}
+form .hint{margin:0 0 22px;color:var(--muted);font-size:.93rem}
+.group+.group{margin-top:26px}
+.group h3{font:600 .95rem var(--body);margin:0 0 14px;padding-bottom:8px;border-bottom:1px solid var(--edge);color:var(--muted)}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:16px 20px}
+.field{min-width:0;border:0;padding:0;margin:0}
+.field.wide{grid-column:1/-1}
+.row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px}
+label,legend{font-weight:600;font-size:.92rem;padding:0}
+output{font-weight:600;color:var(--blue);font-variant-numeric:tabular-nums;background:var(--blue-soft);padding:0 10px;border-radius:6px;min-width:44px;text-align:center}
+
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:24px;background:transparent;margin:0;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:linear-gradient(to right,var(--blue) var(--p,50%),var(--edge) var(--p,50%))}
+input[type=range]::-moz-range-track{height:6px;border-radius:3px;background:var(--edge)}
+input[type=range]::-moz-range-progress{height:6px;border-radius:3px;background:var(--blue)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;margin-top:-7px;border-radius:50%;background:var(--card);border:3px solid var(--blue);box-shadow:0 1px 4px rgba(0,0,0,.25);transition:transform .15s}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--card);border:3px solid var(--blue)}
+input[type=range]:active::-webkit-slider-thumb{transform:scale(1.18)}
+
+.seg-group{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.seg{position:relative}
+.seg input{position:absolute;opacity:0;inset:0;cursor:pointer;margin:0}
+.seg span{display:block;padding:7px 14px;border:1px solid var(--edge);border-radius:9px;font-size:.9rem;font-weight:500;background:var(--card);transition:background .15s,border-color .15s,color .15s}
+.seg input:checked+span{background:var(--blue-soft);border-color:var(--blue);color:var(--blue);font-weight:600}
+.seg input:focus-visible+span,input[type=range]:focus-visible,button:focus-visible,summary:focus-visible,.switch input:focus-visible+.knob{outline:3px solid var(--blue);outline-offset:2px}
+
+.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:26px}
+.btn{font:600 1rem var(--body);border-radius:10px;padding:12px 22px;cursor:pointer;border:1px solid var(--blue);transition:transform .12s,opacity .2s}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--blue);color:var(--on-blue)}
+.btn.ghost{background:var(--card);color:var(--blue)}
+.btn.plain{border-color:transparent;background:none;color:var(--muted);padding:12px 10px}
+.btn:disabled{opacity:.6;cursor:wait}
+.switch{position:relative;display:inline-flex;align-items:center;gap:8px;margin-left:auto;font-size:.9rem;font-weight:500;color:var(--muted);cursor:pointer}
+.switch input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.knob{width:38px;height:22px;border-radius:11px;background:var(--edge);position:relative;transition:background .2s}
+.knob::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s}
+.switch input:checked+.knob{background:var(--blue)}
+.switch input:checked+.knob::after{transform:translateX(16px)}
+
+.result{position:sticky;top:16px}
+.sheet{position:relative;background:var(--sheet);border:1px solid var(--edge);border-radius:18px;min-height:360px;padding:26px 26px 26px 58px;box-shadow:var(--shadow);
+  background-image:repeating-linear-gradient(transparent 0 31px,var(--rule) 31px 32px);background-position:0 12px;transition:background-color .3s}
+.sheet::before{content:"";position:absolute;top:0;bottom:0;left:40px;width:2px;background:var(--margin)}
+.sheet p{margin:0}
+.empty{color:var(--muted);line-height:32px;padding-top:8px}
+.label{color:var(--muted);font-weight:500;line-height:32px}
+.mark{position:relative;display:inline-block;padding:10px 34px;margin:6px 0 4px}
+.mark .num{font:700 clamp(3.4rem,8vw,5rem)/1 var(--display);color:var(--pen);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.mark .num.sm{font-size:clamp(2.2rem,5vw,3.2rem)}
+.mark .out{font:500 1rem var(--body);color:var(--muted);margin-left:6px}
+.mark svg{position:absolute;inset:-6px -10px;width:calc(100% + 20px);height:calc(100% + 12px);overflow:visible}
+.mark path{fill:none;stroke:var(--pen);stroke-width:3.5;stroke-linecap:round;stroke-dasharray:100;stroke-dashoffset:100}
+.mark.drawn path{animation:draw .9s ease-out forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.band{font:700 1.4rem var(--display);line-height:32px}
+.band small{font:500 1rem var(--body);color:var(--muted)}
+.note{color:var(--muted);line-height:32px}
+.actual{display:inline-block;margin-top:6px;background:var(--blue-soft);color:var(--blue);font-weight:600;padding:2px 10px;border-radius:6px;line-height:26px}
+
+.ruler{position:relative;margin:26px 0 12px}
+.track{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;height:12px}
+.track i{border-radius:6px;opacity:.4;transition:opacity .35s,transform .35s}
+.track i:nth-child(1){background:var(--s1)}.track i:nth-child(2){background:var(--s2)}.track i:nth-child(3){background:var(--s3)}.track i:nth-child(4){background:var(--s4)}
+.track i.on{opacity:1;transform:scaleY(1.35)}
+.pin{position:absolute;top:-8px;left:0;transition:left .6s cubic-bezier(.3,1.25,.5,1)}
+.pin::after{content:"";display:block;width:4px;height:28px;margin-left:-2px;background:var(--pen);border-radius:2px;box-shadow:0 0 0 2px var(--sheet)}
+.ticks{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:10px;font-size:.74rem;color:var(--muted);line-height:1.3}
+.ticks b{display:block;color:var(--ink);font-weight:600}
+
+.bars{margin-top:8px}
+.bar{display:grid;grid-template-columns:92px 1fr 44px;gap:10px;align-items:center;line-height:32px;font-size:.92rem}
+.bar i{display:block;height:10px;border-radius:5px;background:var(--blue-soft);overflow:hidden}
+.bar b{display:block;height:100%;width:0;background:var(--blue);border-radius:5px;transition:width .6s cubic-bezier(.3,1,.4,1),background .3s}
+.bar.top b{background:var(--pen)}
+.bar .pct{text-align:right;font-variant-numeric:tabular-nums}
+
+.history{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px}
+.history .title{font-size:.88rem;color:var(--muted);font-weight:500}
+.chip{font:500 .88rem var(--body);background:var(--card);color:var(--ink);border:1px solid var(--edge);border-radius:999px;padding:4px 12px;cursor:pointer;transition:border-color .15s,color .15s}
+.chip:hover{border-color:var(--blue);color:var(--blue)}
+
+details{margin-top:28px;background:var(--card);border:1px solid var(--edge);border-radius:14px;padding:14px 18px}
+summary{cursor:pointer;font-weight:600}
+details p{color:var(--muted);margin:10px 0 0;max-width:80ch}
+footer{margin-top:20px;color:var(--muted);font-size:.85rem;text-align:center}
+
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:10px;font-weight:500;font-size:.92rem;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:10;max-width:calc(100vw - 32px)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.banner{background:var(--card);border:1px solid var(--pen);color:var(--pen);font-weight:600;border-radius:12px;padding:14px 18px;margin-bottom:20px}
+
+@media(max-width:860px){
+  .panel.active{grid-template-columns:1fr}
+  .result{position:static}
+  .fields{grid-template-columns:1fr}
+  .sheet{padding-left:52px}
+  .switch{margin-left:0}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}
+  .mark path{stroke-dashoffset:0}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Student Performance Predictor</h1>
+      <p>Enter a student's study habits and get a predicted exam score or final grade. Predictions come from models trained on a real student dataset.</p>
+    </div>
+    <button class="theme" id="theme" type="button" aria-label="Switch between light and dark mode">
+      <svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    </button>
+  </header>
+
+  <div class="stats" id="stats" aria-label="Model results"></div>
+
+  <div class="tabs" id="tabs" role="tablist">
+    <button role="tab" id="tab-reg" aria-selected="true" aria-controls="panel-reg">Predict exam score</button>
+    <button role="tab" id="tab-clf" aria-selected="false" aria-controls="panel-clf">Predict final grade</button>
+  </div>
+
+  <section class="panel active" id="panel-reg" role="tabpanel" aria-labelledby="tab-reg">
+    <form id="form-reg" data-kind="reg" novalidate>
+      <h2>Exam score</h2>
+      <p class="hint">Get a predicted score out of 100.</p>
+      <div class="groups"></div>
+      <div class="actions">
+        <button class="btn primary" type="submit">Predict score</button>
+        <button class="btn ghost" type="button" data-sample>Try a real student</button>
+        <button class="btn plain" type="button" data-reset>Reset</button>
+        <label class="switch"><input type="checkbox" class="live" checked><span class="knob"></span>Live prediction</label>
+      </div>
+    </form>
+    <div class="result">
+      <div class="sheet" aria-live="polite">
+        <p class="empty" id="empty-reg">Your predicted score will appear here.</p>
+        <div id="body-reg" hidden>
+          <p class="label">Predicted score</p>
+          <div class="mark" id="mark-reg"><span class="num" id="reg-num">0</span><span class="out">/ 100</span><svg viewBox="0 0 220 110" preserveAspectRatio="none" aria-hidden="true"><path pathLength="100" d="M26 60C22 26 92 8 140 14c52 7 76 38 58 66-18 28-96 30-142 16C18 85 20 48 74 28"/></svg></div>
+          <p class="band" id="reg-band"></p>
+          <div class="ruler" id="ruler-reg"></div>
+          <p class="note" id="reg-note"></p>
+          <p id="reg-actual"></p>
+        </div>
+      </div>
+      <div class="history" id="hist-reg" hidden></div>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-clf" role="tabpanel" aria-labelledby="tab-clf">
+    <form id="form-clf" data-kind="clf" novalidate>
+      <h2>Final grade</h2>
+      <p class="hint">Find out which grade band the student is most likely to land in.</p>
+      <div class="groups"></div>
+      <div class="actions">
+        <button class="btn primary" type="submit">Predict grade</button>
+        <button class="btn ghost" type="button" data-sample>Try a real student</button>
+        <button class="btn plain" type="button" data-reset>Reset</button>
+        <label class="switch"><input type="checkbox" class="live" checked><span class="knob"></span>Live prediction</label>
+      </div>
+    </form>
+    <div class="result">
+      <div class="sheet" aria-live="polite">
+        <p class="empty" id="empty-clf">Your predicted grade will appear here.</p>
+        <div id="body-clf" hidden>
+          <p class="label">Most likely grade</p>
+          <div class="mark" id="mark-clf"><span class="num sm" id="clf-name"></span><svg viewBox="0 0 220 110" preserveAspectRatio="none" aria-hidden="true"><path pathLength="100" d="M26 60C22 26 92 8 140 14c52 7 76 38 58 66-18 28-96 30-142 16C18 85 20 48 74 28"/></svg></div>
+          <p class="note" id="clf-range"></p>
+          <div class="ruler" id="ruler-clf"></div>
+          <div class="bars" id="clf-bars"></div>
+          <p id="clf-actual"></p>
+        </div>
+      </div>
+      <div class="history" id="hist-clf" hidden></div>
+    </div>
+  </section>
+
+  <details id="about"><summary>How accurate is this?</summary><p id="about-text"></p></details>
+  <footer>Built with scikit-learn, FastAPI and plain HTML</footer>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const API = location.protocol === "file:" ? "http://127.0.0.1:8000" : "";
+const SERVER_HELP = "Cannot reach the server. Start it with: python -m uvicorn main:app";
+
+// Names shown on the form. Change the option text here if your data dictionary says otherwise.
+const FIELDS = {
+  StudyHours:           {name: "Study hours per week"},
+  Attendance:           {name: "Attendance (%)"},
+  OnlineCourses:        {name: "Online courses taken"},
+  AssignmentCompletion: {name: "Assignments completed (%)"},
+  Discussions:          {name: "Joins class discussions", options: ["No", "Yes"]},
+  EduTech:              {name: "Uses education technology", options: ["No", "Yes"]},
+  Age:                  {name: "Age"},
+  Gender:               {name: "Gender", options: ["Type 0", "Type 1"]},
+  LearningStyle:        {name: "Learning style", options: ["Style 0", "Style 1", "Style 2", "Style 3"]},
+  StressLevel:          {name: "Stress level", options: ["Level 0", "Level 1", "Level 2"]},
+};
+const GROUPS = [
+  {title: "Study habits", keys: ["StudyHours", "Attendance", "OnlineCourses", "AssignmentCompletion", "Discussions", "EduTech"]},
+  {title: "About the student", keys: ["Age", "Gender", "LearningStyle", "StressLevel"]},
+];
+const URLS = {reg: "/predict/regression", clf: "/predict/classification"};
+const NAMES = ["Needs work", "Average", "Good", "Top band"]; // lowest marks to highest
+
+let info = null, actual = null;
+const seq = {reg: 0, clf: 0}, timers = {}, history = {reg: [], clf: []};
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+
+/* ---------- helpers ---------- */
+function toast(text) {
+  const t = $("#toast");
+  t.textContent = text; t.classList.add("show");
+  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove("show"), 3200);
+}
+
+function countTo(el, to, {dec = 1, prefix = "", suffix = ""} = {}) {
+  const from = Number(el.dataset.v ?? 0);
+  el.dataset.v = to;
+  cancelAnimationFrame(el._raf);
+  const draw = v => el.textContent = prefix + v.toFixed(dec) + suffix;
+  if (reduceMotion || from === to) return draw(to);
+  const t0 = performance.now();
+  const step = now => {
+    const k = Math.min(1, (now - t0) / 500), e = 1 - Math.pow(1 - k, 3);
+    draw(from + (to - from) * e);
+    if (k < 1) el._raf = requestAnimationFrame(step);
+  };
+  el._raf = requestAnimationFrame(step);
+}
+
+const asc = () => Object.entries(info.grade_bands).sort((a, b) => a[1][0] - b[1][0]).map(e => e[0]);
+const bandName = g => NAMES[asc().indexOf(String(g))];
+function gradeOfScore(score) {
+  const hit = Object.entries(info.grade_bands).find(([, r]) => score >= r[0] - 0.5 && score <= r[1] + 0.5);
+  if (hit) return hit[0];
+  const list = asc();
+  return score < info.grade_bands[list[0]][0] ? list[0] : list[list.length - 1];
+}
+
+/* ---------- form ---------- */
+function paint(el) {
+  el.style.setProperty("--p", ((el.value - el.min) / (el.max - el.min) * 100) + "%");
+}
+
+function buildField(key, spec, formId) {
+  const f = FIELDS[key], id = `${formId}-${key}`;
+  if (f.options) {
+    const radios = f.options.map((text, i) => `
+      <label class="seg"><input type="radio" name="${key}" value="${spec.min + i}" ${spec.min + i === spec.default ? "checked" : ""}><span>${text}</span></label>`).join("");
+    return `<fieldset class="field"><legend>${f.name}</legend><div class="seg-group">${radios}</div></fieldset>`;
+  }
+  return `<div class="field wide"><div class="row"><label for="${id}">${f.name}</label><output for="${id}">${spec.default}</output></div>
+    <input type="range" id="${id}" name="${key}" min="${spec.min}" max="${spec.max}" value="${spec.default}"></div>`;
+}
+
+function buildForms() {
+  $$("form").forEach(form => {
+    $(".groups", form).innerHTML = GROUPS.map(g => `
+      <div class="group"><h3>${g.title}</h3><div class="fields">${g.keys.map(k => buildField(k, info.features[k], form.id)).join("")}</div></div>`).join("");
+    $$("input[type=range]", form).forEach(paint);
+  });
+}
+
+function setValue(name, value) {
+  $$(`[name="${name}"]`).forEach(el => {
+    if (el.type === "radio") el.checked = el.value == value;
+    else { el.value = value; paint(el); el.closest(".field").querySelector("output").textContent = value; }
+  });
+}
+
+function readForm(form) {
+  const data = {};
+  new FormData(form).forEach((v, k) => data[k] = Number(v));
+  return data;
+}
+
+function fillForms(data) {
+  Object.keys(FIELDS).forEach(k => setValue(k, data[k]));
+}
+
+/* ---------- results ---------- */
+function buildRuler(host, withPin) {
+  const bands = asc();
+  host.innerHTML = `<div class="track">${bands.map(() => "<i></i>").join("")}</div>${withPin ? '<div class="pin"></div>' : ""}
+    <div class="ticks">${bands.map(g => `<span><b>${bandName(g)}</b>${info.grade_bands[g][0]}–${info.grade_bands[g][1]}</span>`).join("")}</div>`;
+}
+
+function setRuler(host, grade, score) {
+  const bands = asc(), i = bands.indexOf(String(grade));
+  $$(".track i", host).forEach((el, n) => el.classList.toggle("on", n === i));
+  const pin = $(".pin", host);
+  if (pin && score != null) {
+    const [lo, hi] = info.grade_bands[grade];
+    const f = Math.min(1, Math.max(0, (score - lo) / (hi - lo)));
+    pin.style.left = ((i + f) / bands.length * 100) + "%";
+  }
+}
+
+function buildBars() {
+  $("#clf-bars").innerHTML = asc().reverse().map(g =>
+    `<div class="bar" data-g="${g}"><span>${bandName(g)}</span><i><b></b></i><span class="pct">0%</span></div>`).join("");
+}
+
+function drawPen(kind) {
+  const m = $("#mark-" + kind);
+  m.classList.remove("drawn"); void m.offsetWidth; m.classList.add("drawn");
+}
+
+function reveal(kind) {
+  const body = $("#body-" + kind);
+  if (!body.hidden) return;
+  $("#empty-" + kind).hidden = true; body.hidden = false; drawPen(kind);
+}
+
+function renderReg(score) {
+  reveal("reg");
+  const g = gradeOfScore(score), [lo, hi] = info.grade_bands[g];
+  countTo($("#reg-num"), score);
+  $("#reg-band").innerHTML = `${bandName(g)} <small>(${lo}–${hi} marks)</small>`;
+  setRuler($("#ruler-reg"), g, score);
+  $("#reg-note").textContent = `Usually within about ${info.regression.mae} marks of the real score.`;
+  $("#reg-actual").innerHTML = actual ? `<span class="actual">Real score in the dataset: ${actual.ExamScore}</span>` : "";
+}
+
+function renderClf(res) {
+  reveal("clf");
+  const g = res.predicted_grade, [lo, hi] = res.score_range;
+  $("#clf-name").textContent = bandName(g);
+  $("#clf-range").textContent = `Scores of ${lo}–${hi} marks.`;
+  setRuler($("#ruler-clf"), g, null);
+  $$("#clf-bars .bar").forEach(row => {
+    const p = Math.round((res.probabilities[row.dataset.g] || 0) * 100);
+    row.classList.toggle("top", row.dataset.g == g);
+    $("b", row).style.width = p + "%";
+    $(".pct", row).textContent = p + "%";
+  });
+  $("#clf-actual").innerHTML = actual ? `<span class="actual">Real grade in the dataset: ${bandName(actual.FinalGrade)}</span>` : "";
+}
+
+/* ---------- history ---------- */
+function addHistory(kind, data, label) {
+  const key = JSON.stringify(data);
+  history[kind] = [{key, data, label}, ...history[kind].filter(h => h.key !== key)].slice(0, 5);
+  const host = $("#hist-" + kind);
+  host.hidden = false;
+  host.innerHTML = `<span class="title">Recent</span>` + history[kind].map((h, i) =>
+    `<button type="button" class="chip" data-i="${i}" title="Load these details again">${h.label}</button>`).join("");
+}
+
+/* ---------- talking to the backend ---------- */
+async function predict(kind, explicit = false) {
+  const form = $("#form-" + kind), btn = $(".primary", form);
+  const id = ++seq[kind], data = readForm(form);
+  if (explicit) btn.disabled = true;
+  try {
+    const res = await fetch(API + URLS[kind], {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(data)});
+    if (id !== seq[kind]) return;
+    if (!res.ok) return toast("Some values are out of range. Adjust them and try again.");
+    const json = await res.json();
+    if (kind === "reg") renderReg(json.predicted_exam_score); else renderClf(json);
+    if (explicit) {
+      drawPen(kind);
+      addHistory(kind, data, kind === "reg" ? json.predicted_exam_score.toFixed(1) : bandName(json.predicted_grade));
+    }
+  } catch { toast(SERVER_HELP); }
+  finally { btn.disabled = false; }
+}
+
+async function loadSample(kind) {
+  try {
+    const row = await (await fetch(API + "/dataset/sample")).json();
+    fillForms(row); actual = row;
+    toast("Loaded a real student from the dataset");
+    predict(kind, true);
+  } catch { toast(SERVER_HELP); }
+}
+
+function resetForm(kind) {
+  Object.entries(info.features).forEach(([k, s]) => setValue(k, s.default));
+  actual = null;
+  if ($("#form-" + kind + " .live").checked) predict(kind);
+}
+
+/* ---------- page ---------- */
+function showTab(kind) {
+  const other = kind === "reg" ? "clf" : "reg";
+  $("#tab-" + kind).setAttribute("aria-selected", "true");
+  $("#tab-" + other).setAttribute("aria-selected", "false");
+  $("#panel-" + other).classList.remove("active");
+  const panel = $("#panel-" + kind);
+  panel.classList.add("active"); panel.classList.remove("enter"); void panel.offsetWidth; panel.classList.add("enter");
+  $("#tabs").style.setProperty("--i", kind === "clf" ? 1 : 0);
+  if ($("#form-" + kind + " .live").checked) predict(kind);
+}
+
+function setupForm(form) {
+  const kind = form.dataset.kind;
+  form.addEventListener("input", e => {
+    if (e.target.name) { setValue(e.target.name, e.target.value); actual = null; }
+    if ($(".live", form).checked) { clearTimeout(timers[kind]); timers[kind] = setTimeout(() => predict(kind), 250); }
+  });
+  form.addEventListener("submit", e => { e.preventDefault(); predict(kind, true); });
+  $("[data-sample]", form).addEventListener("click", () => loadSample(kind));
+  $("[data-reset]", form).addEventListener("click", () => resetForm(kind));
+  $(".live", form).addEventListener("change", e => {
+    $$(".live").forEach(box => box.checked = e.target.checked);
+    if (e.target.checked) predict(kind);
+  });
+  $("#hist-" + kind).addEventListener("click", e => {
+    const chip = e.target.closest(".chip");
+    if (!chip) return;
+    fillForms(history[kind][chip.dataset.i].data); actual = null;
+    predict(kind, true);
+  });
+}
+
+async function start() {
+  try { info = await (await fetch(API + "/dataset/info")).json(); }
+  catch { $(".wrap").insertAdjacentHTML("afterbegin", `<p class="banner">${SERVER_HELP}</p>`); return; }
+
+  buildForms();
+  buildRuler($("#ruler-reg"), true);
+  buildRuler($("#ruler-clf"), false);
+  buildBars();
+
+  const acc = info.classification.accuracy * 100;
+  $("#stats").innerHTML = `
+    <span class="stat">Typical error <b id="st-mae"></b> marks</span>
+    <span class="stat">Grade accuracy <b id="st-acc"></b></span>
+    <span class="stat">Score fit (R²) <b id="st-r2"></b></span>`;
+  countTo($("#st-mae"), info.regression.mae, {dec: 2, prefix: "±"});
+  countTo($("#st-acc"), acc, {dec: 1, suffix: "%"});
+  countTo($("#st-r2"), info.regression.r2, {dec: 2});
+
+  $("#about-text").textContent =
+    `The score model is usually off by about ${info.regression.mae} marks (R² ${info.regression.r2}), and the grade model picks the right grade ${acc.toFixed(1)}% of the time. ` +
+    `These numbers come from held-out students in the same dataset. A student profile that looks nothing like the dataset is much harder to predict (typical error around ${Math.round(info.new_profile_mae)} marks).`;
+
+  $$("form").forEach(setupForm);
+  $("#tab-reg").onclick = () => showTab("reg");
+  $("#tab-clf").onclick = () => showTab("clf");
+  $("#theme").onclick = () => {
+    const t = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = t;
+    try { localStorage.setItem("theme", t); } catch {}
+  };
+
+  predict("reg");
+}
+start();
+</script>
+</body>
+</html>
